@@ -43,14 +43,16 @@
   (binding [*temp-sym-count* temp-sym-count
             *last-sexpr*     last-sexpr
             *print-pretty*   true]
-    (let [transpiled (with-out-str (js-emit expr))]
-      (println "---TRANSPILED STARTS---")
-      (println transpiled)
-      (println "---TRANSPILED ENDS---\n")
-      (println "---EVALUATED STARTS---")
-      ;; (println (some-evaluator transpiled))
-      (println "---EVALUATED ENDS---")
-      "")))
+    (try (let [transpiled (with-out-str (js-emit expr))]
+           (println "---TRANSPILED STARTS---")
+           (println transpiled)
+           (println "---TRANSPILED ENDS---\n")
+           (println "---EVALUATED STARTS---")
+           ;; (println (some-evaluator transpiled))
+           (println "---EVALUATED ENDS---")
+           "")
+         (catch Throwable e
+           (println e)))))
 
 (defn chlorine-eval
   [repl-env expr {:keys [verbose warn-on-undeclared special-fns]}]
