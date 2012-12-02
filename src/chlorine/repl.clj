@@ -1,5 +1,6 @@
 (ns chlorine.repl
-  (:use [chlorine.js :only [js-emit *temp-sym-count* *last-sexpr*]])
+  (:use [chlorine.js :only [js-emit
+                            *temp-sym-count* *last-sexpr* *print-pretty*]])
   (:require [clojure.tools.nrepl :as nrepl]
             (clojure.tools.nrepl [transport :as transport]
                                  [server :as server]
@@ -40,8 +41,16 @@
 
 (defn browser-eval [expr]
   (binding [*temp-sym-count* temp-sym-count
-            *last-sexpr*     last-sexpr]
-    (js-emit expr)))
+            *last-sexpr*     last-sexpr
+            *print-pretty*   true]
+    (let [transpiled (with-out-str (js-emit expr))]
+      (println "---TRANSPILED STARTS---")
+      (println transpiled)
+      (println "---TRANSPILED ENDS---\n")
+      (println "---EVALUATED STARTS---")
+      ;; (println (some-evaluator transpiled))
+      (println "---EVALUATED ENDS---")
+      "")))
 
 (defn chlorine-eval
   [repl-env expr {:keys [verbose warn-on-undeclared special-fns]}]
@@ -83,9 +92,7 @@
                code
                (let [reader (LineNumberingPushbackReader. (StringReader. code))
                      end (Object.)]
-                 (->> #(binding [*ns* (create-ns *cl2-ns*)
-                                 ;; *data-readers* tags/*cl2-data-readers*
-                                 ]
+                 (->> #(binding [*ns* (create-ns *cl2-ns*)]
                          (try
                            (read reader false end)
                            (catch Exception e
