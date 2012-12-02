@@ -1,4 +1,5 @@
 (ns chlorine.repl
+  (:use [chlorine.js :only [js-emit *temp-sym-count* *last-sexpr*]])
   (:require [clojure.tools.nrepl :as nrepl]
             (clojure.tools.nrepl [transport :as transport]
                                  [server :as server]
@@ -12,6 +13,9 @@
 (def ^:dynamic *cl2-ns* 'cl2.user)
 (def ^:dynamic *cl2-repl-options* nil)
 
+(def temp-sym-count (ref 999))
+(def last-sexpr (ref nil))
+
 (defn rhino-repl-env
   "Returns a new Chlorine REPL environment"
   []
@@ -22,6 +26,8 @@
   (set! *cl2-repl-env* repl-env)
   (set! *eval* eval)
   (set! *cl2-ns* 'cl2.user)
+  (dosync (ref-set temp-sym-count 999)
+          (ref-set last-sexpr nil))
   (print "Type `")
   (pr :cl2/quit)
   (println "` to stop the Chlorine REPL"))
@@ -33,15 +39,9 @@
   (set! *cl2-ns* 'cl2.user))
 
 (defn browser-eval [expr]
-  (cond
-   (string? expr)
-   "String!"
-
-   (number? expr)
-   "Number!"
-
-   :else
-   "Unknown :("))
+  (binding [*temp-sym-count* temp-sym-count
+            *last-sexpr*     last-sexpr]
+    (js-emit expr)))
 
 (defn chlorine-eval
   [repl-env expr {:keys [verbose warn-on-undeclared special-fns]}]
