@@ -21,9 +21,8 @@
 (def temp-sym-count (ref 999))
 (def last-sexpr (ref nil))
 
-(def rhino-session (rhino-context))
-
 (defn launch-cl2-repl
+  "Launches REPL by setting some vars and printing a welcome message."
   [repl-env eval]
   (set! *cl2-repl-env* repl-env)
   (set! *eval* eval)
@@ -39,17 +38,21 @@
   (println "` to stop the Chlorine REPL"))
 
 (defn quit-cl2-repl
+  "Resets some dynamic vars when quiting REPL."
   []
   (set! *cl2-repl-env* nil)
   (set! *eval* nil)
   (set! *cl2-ns* 'cl2))
 
-(defn browser-eval [expr]
+(defn rhino-eval
+  "Transcripts Chlorine an expression and prints both javascript
+  and evaluated value."
+  [expr]
   (binding [*temp-sym-count* temp-sym-count
             *last-sexpr*     last-sexpr
             *print-pretty*   true]
     (try (let [transcripted (with-out-str (js-emit expr))
-               evaluated  (binding [*context* rhino-session]
+               evaluated  (binding [*context* *cl2-repl-env*]
                             (evaljs transcripted))]
            (println (style
                      (str "#<" transcripted ">")
@@ -68,7 +71,7 @@
      (apply (get special-fns (first expr)) repl-env (rest expr))
 
      :default
-     (let [ret (browser-eval expr)]
+     (let [ret (rhino-eval expr)]
        (try
          (read-string ret)
          (catch Exception _
