@@ -1,4 +1,4 @@
-(defproject chlorine-repl "0.0.1"
+(defproject chlorine-repl "0.0.2"
   :description "Running Chlorine REPLs over nREPL."
   :url "http://github.com/myguidingstar/chlorine-repl"
   :license {:name "Eclipse Public License"
@@ -6,11 +6,11 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.nrepl "0.2.0-RC1"]
-                 [chlorine "1.6.0"]
-                 [boot-cl2 "1.0.0"]
+                 [chlorine "1.5.2.1"]
+                 [core-cl2 "0.7.0"]
                  ]
 
   :injections [(require 'chlorine.repl)]
   :repl-options {:nrepl-middleware [chlorine.repl/wrap-chlorine-repl]}
 
-  :scm {:url "git@github.com:myguidingstar/chlorine-repl.git"})
+  :scm {:url "git@github.com:chlorine/chlorine-repl.git"})
