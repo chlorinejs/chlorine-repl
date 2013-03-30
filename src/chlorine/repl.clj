@@ -30,8 +30,12 @@
   (set! *cl2-ns* 'cl2)
   (dosync (ref-set temp-sym-count 999)
           (ref-set last-sexpr nil))
+  (println "Welcome to Chlorine REPL.")
   (print "Type `")
-  (pr :cl2/quit)
+  (print (style "(include! \"r:/dev.cl2\")" :blue))
+  (println "` to load core library.")
+  (print "Type `")
+  (print (style ":cl2/quit" :blue))
   (println "` to stop the Chlorine REPL"))
 
 (defn quit-cl2-repl
