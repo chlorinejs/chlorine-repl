@@ -1,6 +1,10 @@
 (ns chlorine.repl
   (:use [chlorine.js :only [js-emit
-                            *temp-sym-count* *last-sexpr* *print-pretty*]])
+                            *temp-sym-count* *last-sexpr* *print-pretty*]]
+        [evaljs.core]
+        [evaljs.rhino]
+        [chlorine.util :only [format-code]]
+        [clansi.core :only [*use-ansi* style]])
   (:require [clojure.tools.nrepl :as nrepl]
             (clojure.tools.nrepl [transport :as transport]
                                  [server :as server]
@@ -11,22 +15,19 @@
 
 (def ^:dynamic *cl2-repl-env* nil)
 (def ^:dynamic *eval* nil)
-(def ^:dynamic *cl2-ns* 'cl2.user)
+(def ^:dynamic *cl2-ns* 'cl2)
 (def ^:dynamic *cl2-repl-options* nil)
 
 (def temp-sym-count (ref 999))
 (def last-sexpr (ref nil))
 
-(defn rhino-repl-env
-  "Returns a new Chlorine REPL environment"
-  []
-  true)
+(def rhino-session (rhino-context))
 
 (defn launch-cl2-repl
   [repl-env eval]
   (set! *cl2-repl-env* repl-env)
   (set! *eval* eval)
-  (set! *cl2-ns* 'cl2.user)
+  (set! *cl2-ns* 'cl2)
   (dosync (ref-set temp-sym-count 999)
           (ref-set last-sexpr nil))
   (print "Type `")
@@ -37,20 +38,19 @@
   []
   (set! *cl2-repl-env* nil)
   (set! *eval* nil)
-  (set! *cl2-ns* 'cl2.user))
+  (set! *cl2-ns* 'cl2))
 
 (defn browser-eval [expr]
   (binding [*temp-sym-count* temp-sym-count
             *last-sexpr*     last-sexpr
             *print-pretty*   true]
-    (try (let [transpiled (with-out-str (js-emit expr))]
-           (println "---TRANSPILED STARTS---")
-           (println transpiled)
-           (println "---TRANSPILED ENDS---\n")
-           (println "---EVALUATED STARTS---")
-           ;; (println (some-evaluator transpiled))
-           (println "---EVALUATED ENDS---")
-           "")
+    (try (let [transcripted (with-out-str (js-emit expr))
+               evaluated  (binding [*context* rhino-session]
+                            (evaljs transcripted))]
+           (println (style
+                     (str "#<" transcripted ">")
+                     :blue))
+           (println (style (format-code evaluated) :green)))
          (catch Throwable e
            (println e)))))
 
@@ -81,7 +81,7 @@
 ;;(update-in {:a 1 :special-fns {'foo "foo"}} [:special-fns] merge {'bar "bar"})
 (defn chlorine-repl
   [& {:keys [repl-env eval] :as options}]
-  (let [repl-env (or repl-env (rhino-repl-env))
+  (let [repl-env (or repl-env (rhino-context))
         eval (or eval #(apply chlorine-eval %&))]
     (set! *cl2-repl-options* (-> (merge {:warn-on-undeclared true} options)
                                   ;; (update-in _)
