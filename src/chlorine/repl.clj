@@ -1,8 +1,7 @@
 (ns chlorine.repl
   (:use [chlorine.js :only [js-emit
                             *temp-sym-count* *last-sexpr* *print-pretty*]]
-        [evaljs.core]
-        [evaljs.rhino]
+        [chlorine.node]
         [chlorine.util :only [format-code]]
         [clansi.core :only [*use-ansi* style]])
   (:require [clojure.tools.nrepl :as nrepl]
@@ -24,7 +23,7 @@
 (defn launch-cl2-repl
   "Launches REPL by setting some vars and printing a welcome message."
   [repl-env eval]
-  (set! *cl2-repl-env* repl-env)
+  (set! *cl2-repl-env* (launch-node-process))
   (set! *eval* eval)
   (set! *cl2-ns* 'cl2)
   (dosync (ref-set temp-sym-count 999)
@@ -40,11 +39,12 @@
 (defn quit-cl2-repl
   "Resets some dynamic vars when quiting REPL."
   []
+  (node-tear-down *cl2-repl-env*)
   (set! *cl2-repl-env* nil)
   (set! *eval* nil)
   (set! *cl2-ns* 'cl2))
 
-(defn rhino-eval
+(defn js-eval
   "Transcripts Chlorine an expression and prints both javascript
   and evaluated value."
   [expr]
@@ -52,14 +52,21 @@
             *last-sexpr*     last-sexpr
             *print-pretty*   true]
     (try (let [transcripted (with-out-str (js-emit expr))
-               evaluated  (binding [*context* *cl2-repl-env*]
-                            (evaljs transcripted))]
+               evaluated    (node-eval *cl2-repl-env* transcripted)
+               value         (:value evaluated)]
            (println (style
                      (str "#<" transcripted ">")
                      :blue))
-           (println (style (format-code evaluated) :green)))
+           (case (:status evaluated)
+             :success
+             (println (style (format-code value) :green))
+
+             :exception
+             (println (style value :yellow))))
+
          (catch Throwable e
-           (println e)))))
+           (println (style "Compilation Error: " :red))
+           (println (style e :red))))))
 
 (defn chlorine-eval
   [repl-env expr {:keys [verbose warn-on-undeclared special-fns]}]
@@ -71,7 +78,7 @@
      (apply (get special-fns (first expr)) repl-env (rest expr))
 
      :default
-     (let [ret (rhino-eval expr)]
+     (let [ret (js-eval expr)]
        (try
          (read-string ret)
          (catch Exception _
@@ -88,7 +95,7 @@
 ;;(update-in {:a 1 :special-fns {'foo "foo"}} [:special-fns] merge {'bar "bar"})
 (defn chlorine-repl
   [& {:keys [repl-env eval] :as options}]
-  (let [repl-env (or repl-env (rhino-context))
+  (let [repl-env (or repl-env (launch-node-process))
         eval (or eval #(apply chlorine-eval %&))]
     (set! *cl2-repl-options* (-> (merge {:warn-on-undeclared true} options)
                                   ;; (update-in _)

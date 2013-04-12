@@ -1,8 +1,7 @@
 (ns chlorine.node
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
-            [cheshire.core :refer [parse-string generate-string]]
-            [chlorine.repl :as cl2-repl])
+            [cheshire.core :refer [parse-string generate-string]])
   (:import java.io.PipedReader
            java.io.PipedWriter))
 
@@ -65,7 +64,7 @@
 (defn node-eval [repl-env expr]
   (let [result
         (let [{:keys [input output]} repl-env]
-          (.write output (str (generate-string {:file "nofile.js"
+          (.write output (str (generate-string {:file "No source file"
                                                 :line 0
                                                 :code expr})
                               "\n"))
