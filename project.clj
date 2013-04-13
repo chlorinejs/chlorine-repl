@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.nrepl "0.2.0-RC1"]
                  [chlorine "1.5.2.2"]
-                 [core-cl2 "0.7.0"]
+                 [core-cl2 "0.7.1"]
                  [myguidingstar/clansi "1.3.0"]]
 
   :injections [(require 'chlorine.repl)]
