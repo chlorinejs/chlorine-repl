@@ -1,7 +1,9 @@
 (ns chlorine.repl
   (:use [chlorine.js :only [js-emit
-                            *temp-sym-count* *last-sexpr* *print-pretty*]]
+                            *temp-sym-count* *print-pretty*]]
         [chlorine.node]
+        [slingshot.slingshot]
+        [clojure.stacktrace :only [print-cause-trace]]
         [chlorine.util :only [format-code]]
         [clansi.core :only [*use-ansi* style]])
   (:require [clojure.tools.nrepl :as nrepl]
@@ -18,7 +20,6 @@
 (def ^:dynamic *cl2-repl-options* nil)
 
 (def temp-sym-count (ref 999))
-(def last-sexpr (ref nil))
 
 (defn launch-cl2-repl
   "Launches REPL by setting some vars and printing a welcome message."
@@ -26,8 +27,7 @@
   (set! *cl2-repl-env* (launch-node-process))
   (set! *eval* eval)
   (set! *cl2-ns* 'cl2)
-  (dosync (ref-set temp-sym-count 999)
-          (ref-set last-sexpr nil))
+  (dosync (ref-set temp-sym-count 999))
   (println "Welcome to Chlorine REPL.")
   (print "Type either ")
   (print (style "`(include! \"r:/dev.cl2\")`" :blue))
@@ -51,24 +51,32 @@
   and evaluated value."
   [expr]
   (binding [*temp-sym-count* temp-sym-count
-            *last-sexpr*     last-sexpr
             *print-pretty*   true]
-    (try (let [transcripted (with-out-str (js-emit expr))
-               evaluated    (node-eval *cl2-repl-env* transcripted)
-               value         (:value evaluated)]
-           (println (style
-                     (str "#<" transcripted ">")
-                     :blue))
-           (case (:status evaluated)
-             :success
-             (println (style (format-code value) :green))
+    (try+ (let [transcripted (with-out-str (js-emit expr))
+                evaluated    (node-eval *cl2-repl-env* transcripted)
+                value         (:value evaluated)]
+            (println (style
+                      (str "#<" transcripted ">")
+                      :blue))
+            (case (:status evaluated)
+              :success
+              (println (style (format-code value) :green))
 
-             :exception
-             (println (style value :yellow))))
-
-         (catch Throwable e
-           (println (style "Compilation Error: " :red))
-           (println (style e :red))))))
+              :exception
+              (println (style value :yellow))))
+          (catch map? e
+            (println (style "Compilation Error: " :red))
+            (println (style (:msg e) :blue))
+            (doseq [i (range (count (:causes e)))
+                    :let [cause (nth (:causes e) i)]]
+              (print (apply str (repeat (inc i) "  ")))
+              (println "caused by " (style cause :yellow)))
+            (when-let [trace (:trace e)]
+              (print-cause-trace trace 3)))
+          (catch Throwable e
+            (println (style "Compilation Error: " :red))
+            (println (style e :red))
+            (print-cause-trace e 3)))))
 
 (defn chlorine-eval
   [repl-env expr {:keys [verbose warn-on-undeclared special-fns]}]
