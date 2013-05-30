@@ -1,7 +1,7 @@
 # Chlorine-REPL
 
 [nREPL](http://github.com/clojure/tools.nrepl) middleware that enables the
-bootstrap of a [Chlorine](http://github.com/chlorinejs/chlorine) REPL on top of an nREPL 
+bootstrap of a [Chlorine](http://github.com/chlorinejs/chlorine) REPL on top of an nREPL
 session.
 
 ## Requirements
@@ -20,7 +20,7 @@ in the REPL, type
 There will be a welcome message like this:
 ```
 Welcome to Chlorine REPL.
-Type `(include! "r:/dev.cl2")` to load core library.
+Type `(include! "r:/strategies/dev.cl2")` to load core library.
 Type `:cl2/quit` to stop the Chlorine REPL
 ```
 Enjoy!
