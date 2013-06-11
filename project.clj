@@ -1,4 +1,4 @@
-(defproject chlorine-repl "0.0.4"
+(defproject chlorine-repl "0.0.5"
   :description "Running Chlorine REPLs over nREPL."
   :url "http://github.com/chlorinejs/chlorine-repl"
   :license {:name "Eclipse Public License"
@@ -6,8 +6,8 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.nrepl "0.2.0-RC1"]
-                 [chlorine "1.5.3.1"]
-                 [core-cl2 "0.7.2"]
+                 [chlorine "1.5.4"]
+                 [core-cl2 "0.7.3"]
                  [myguidingstar/clansi "1.3.0"]]
 
   :injections [(require 'chlorine.repl)]
