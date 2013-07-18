@@ -6,7 +6,7 @@
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.nrepl "0.2.3"]
-                 [chlorine "1.6.1"]
+                 [chlorine "1.6.2"]
                  [core-cl2 "0.8.0"]
                  [myguidingstar/clansi "1.3.0"]]
 
