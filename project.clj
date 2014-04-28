@@ -1,4 +1,4 @@
-(defproject chlorine-repl "0.1.0-SNAPSHOT"
+(defproject chlorine/repl "0.1.0-SNAPSHOT"
   :description "Running Chlorine REPLs over nREPL."
   :url "http://github.com/chlorinejs/chlorine-repl"
   :license {:name "Eclipse Public License"
