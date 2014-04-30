@@ -7,8 +7,8 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.2.0"]
                  [org.clojure/tools.nrepl "0.2.3"]
-                 [chlorine "1.6.4-SNAPSHOT"]
-                 [core-cl2 "0.9.0-SNAPSHOT"]
+                 [chlorine/js "1.6.4-SNAPSHOT"]
+                 [chlorine/core-cl2 "0.9.0-SNAPSHOT"]
                  [myguidingstar/clansi "1.3.0"]]
 
   :injections [(require 'chlorine.repl)]
